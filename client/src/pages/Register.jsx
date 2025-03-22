@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
-import { FaRegEyeSlash } from "react-icons/fa6";
-import { FaRegEye } from "react-icons/fa6";
+import { FaRegEyeSlash, FaRegEye } from "react-icons/fa6";
 import toast from 'react-hot-toast';
 import Axios from '../utils/Axios';
 import SummaryApi from '../common/SummaryApi';
@@ -12,53 +11,52 @@ const Register = () => {
         name: "",
         email: "",
         password: "",
-        confirmPassword: ""
+        confirmPassword: "",
+        isAdmin: false
     })
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const navigate = useNavigate()
 
     const handleChange = (e) => {
-        const { name, value } = e.target
+        const { name, value, type, checked } = e.target
 
-        setData((preve) => {
+        setData((prev) => {
             return {
-                ...preve,
-                [name]: value
+                ...prev,
+                [name]: type === "checkbox" ? checked : value
             }
         })
     }
 
-    const valideValue = Object.values(data).every(el => el)
+    const valideValue = Object.values(data).slice(0, 4).every(el => el)
 
-
-    const handleSubmit = async(e)=>{
+    const handleSubmit = async (e) => {
         e.preventDefault()
 
-        if(data.password !== data.confirmPassword){
-            toast.error(
-                "password and confirm password must be same"
-            )
+        if (data.password !== data.confirmPassword) {
+            toast.error("Password and confirm password must be the same")
             return
         }
 
         try {
             const response = await Axios({
                 ...SummaryApi.register,
-                data : data
+                data: data
             })
-            
-            if(response.data.error){
+
+            if (response.data.error) {
                 toast.error(response.data.message)
             }
 
-            if(response.data.success){
+            if (response.data.success) {
                 toast.success(response.data.message)
                 setData({
-                    name : "",
-                    email : "",
-                    password : "",
-                    confirmPassword : ""
+                    name: "",
+                    email: "",
+                    password: "",
+                    confirmPassword: "",
+                    isAdmin: false
                 })
                 navigate("/login")
             }
@@ -66,10 +64,8 @@ const Register = () => {
         } catch (error) {
             AxiosToastError(error)
         }
-
-
-
     }
+
     return (
         <section className='w-full container mx-auto px-2'>
             <div className='bg-white my-4 w-full max-w-lg mx-auto rounded p-7'>
@@ -113,14 +109,8 @@ const Register = () => {
                                 onChange={handleChange}
                                 placeholder='Enter your password'
                             />
-                            <div onClick={() => setShowPassword(preve => !preve)} className='cursor-pointer'>
-                                {
-                                    showPassword ? (
-                                        <FaRegEye />
-                                    ) : (
-                                        <FaRegEyeSlash />
-                                    )
-                                }
+                            <div onClick={() => setShowPassword(prev => !prev)} className='cursor-pointer'>
+                                {showPassword ? <FaRegEye /> : <FaRegEyeSlash />}
                             </div>
                         </div>
                     </div>
@@ -136,24 +126,31 @@ const Register = () => {
                                 onChange={handleChange}
                                 placeholder='Enter your confirm password'
                             />
-                            <div onClick={() => setShowConfirmPassword(preve => !preve)} className='cursor-pointer'>
-                                {
-                                    showConfirmPassword ? (
-                                        <FaRegEye />
-                                    ) : (
-                                        <FaRegEyeSlash />
-                                    )
-                                }
+                            <div onClick={() => setShowConfirmPassword(prev => !prev)} className='cursor-pointer'>
+                                {showConfirmPassword ? <FaRegEye /> : <FaRegEyeSlash />}
                             </div>
                         </div>
                     </div>
 
-                    <button disabled={!valideValue} className={` ${valideValue ? "bg-green-800 hover:bg-green-700" : "bg-gray-500" }    text-white py-2 rounded font-semibold my-3 tracking-wide`}>Register</button>
+                    {/* Checkbox for isAdmin */}
+                    <div className='flex items-center gap-2'>
+                        <input
+                            type='checkbox'
+                            id='isAdmin'
+                            name='isAdmin'
+                            checked={data.isAdmin}
+                            onChange={handleChange}
+                        />
+                        <label htmlFor='isAdmin'>Register as Admin</label>
+                    </div>
 
+                    <button disabled={!valideValue} className={` ${valideValue ? "bg-green-800 hover:bg-green-700" : "bg-gray-500"} text-white py-2 rounded font-semibold my-3 tracking-wide`}>
+                        Register
+                    </button>
                 </form>
 
                 <p>
-                    Already have account ? <Link to={"/login"} className='font-semibold text-green-700 hover:text-green-800'>Login</Link>
+                    Already have an account? <Link to={"/login"} className='font-semibold text-green-700 hover:text-green-800'>Login</Link>
                 </p>
             </div>
         </section>

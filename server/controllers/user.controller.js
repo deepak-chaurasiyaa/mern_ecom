@@ -11,11 +11,11 @@ import jwt from 'jsonwebtoken'
 
 export async function registerUserController(request, response) {
     try {
-        const { name, email, password } = request.body
+        const { name, email, password, isAdmin } = request.body
 
         if (!name || !email || !password) {
             return response.status(400).json({
-                message: "provide email, name, password",
+                message: "Provide email, name, and password",
                 error: true,
                 success: false
             })
@@ -25,7 +25,7 @@ export async function registerUserController(request, response) {
 
         if (user) {
             return response.json({
-                message: "Already register email",
+                message: "Email is already registered",
                 error: true,
                 success: false
             })
@@ -37,7 +37,8 @@ export async function registerUserController(request, response) {
         const payload = {
             name,
             email,
-            password: hashPassword
+            password: hashPassword,
+            role: isAdmin ? "ADMIN" : "USER"
         }
 
         const newUser = new UserModel(payload)
@@ -47,7 +48,7 @@ export async function registerUserController(request, response) {
 
         const verifyEmail = await sendEmail({
             sendTo: email,
-            subject: "Verify email from binkeyit",
+            subject: "Verify your email from Binkeyit",
             html: verifyEmailTemplate({
                 name,
                 url: VerifyEmailUrl
@@ -55,7 +56,7 @@ export async function registerUserController(request, response) {
         })
 
         return response.json({
-            message: "User register successfully",
+            message: "User registered successfully",
             error: false,
             success: true,
             data: save
@@ -69,6 +70,7 @@ export async function registerUserController(request, response) {
         })
     }
 }
+
 
 export async function verifyEmailController(request, response) {
     try {
@@ -127,7 +129,7 @@ export async function loginController(request, response) {
 
         if (user.status !== 'Active') {
             return response.status(400).json({
-                message: 'Contact Admin for activation',
+                message: 'Contact Admin for account activation',
                 error: true,
                 success: false,
             });
@@ -154,7 +156,7 @@ export async function loginController(request, response) {
         // Secure cookie options
         const cookiesOption = {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // Use true for production
+            secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
         };
 
@@ -169,6 +171,7 @@ export async function loginController(request, response) {
             data: {
                 accesstoken,
                 refreshToken,
+                role: user.role // Return role as ADMIN or USER
             },
         });
     } catch (error) {
